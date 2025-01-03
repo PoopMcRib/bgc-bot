@@ -42,6 +42,30 @@ async def fetch_cards(board_id, session, closed=False):
             return []
         return await response.json()
 
+async def fetch_roblox_user_id(username):
+    """Fetch Roblox user ID based on username."""
+    url = f"https://users.roblox.com/v1/usernames/users"
+    payload = {"usernames": [username]}
+    headers = {"Content-Type": "application/json"}
+    async with ClientSession() as session:
+        async with session.post(url, json=payload, headers=headers) as response:
+            if response.status != 200:
+                return None
+            data = await response.json()
+            if "data" in data and data["data"]:
+                return data["data"][0]["id"]
+    return None
+
+async def fetch_roblox_previous_usernames(user_id):
+    """Fetch previous usernames of a Roblox user."""
+    url = f"https://users.roblox.com/v1/users/{user_id}/username-history"
+    async with ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status != 200:
+                return []
+            data = await response.json()
+            return [entry["name"] for entry in data.get("data", [])]
+
 @bot.command()
 async def search(ctx, keyword: str):
     """Search Trello boards for a given keyword and send results in the chat."""
@@ -132,6 +156,14 @@ async def search(ctx, keyword: str):
         # Add more board IDs as needed
     ]
     results = {}
+    seen_cards = set()  # Track cards already added
+    usernames_to_search = [keyword]
+
+    # Fetch Roblox user details if the keyword is a username
+    user_id = await fetch_roblox_user_id(keyword)
+    if user_id:
+        previous_usernames = await fetch_roblox_previous_usernames(user_id)
+        usernames_to_search.extend(previous_usernames)
 
     async with ClientSession() as session:
         tasks = []
@@ -155,23 +187,31 @@ async def search(ctx, keyword: str):
 
             board_results = []
             for card, is_archived in all_cards:
-                if keyword.lower() in card["name"].lower() or keyword.lower() in card.get("desc", "").lower():
-                    card_link = f"https://trello.com/c/{card['shortLink']}"
-                    archive_notice = " (Archived)" if is_archived else ""
-                    board_results.append(f"{card['name']}: {card_link}{archive_notice}")
+                card_id = card['id']
+                if card_id in seen_cards:  # Skip if card is already added
+                    continue
+
+                for username in usernames_to_search:
+                    if username.lower() in card["name"].lower() or username.lower() in card.get("desc", "").lower():
+                        seen_cards.add(card_id)  # Mark card as seen
+                        card_link = f"https://trello.com/c/{card['shortLink']}"
+                        archive_notice = " (Archived)" if is_archived else ""
+                        board_results.append(f"{card['name']}: {card_link}{archive_notice}")
 
             if board_results:
-                results[board_name] = board_results
+                results[board_name] = list(set(results.get(board_name, []) + board_results))
 
     # Create a text file with the results
     if results:
         filename = f"{keyword}_Background_Check.txt"
         with open(filename, "w", encoding="utf-8") as file:
+            # Write previous usernames at the top
+            file.write("Previous Usernames: " + ", ".join(previous_usernames) + "\n\n")
             for board_name, board_results in results.items():
                 file.write(f"Board: {board_name}\n")
                 file.write("\n".join(board_results) + "\n\n")
 
-        await ctx.send(f"{ctx.author.mention}, {keyword}'s butthole inspection is complete, sir!", file=discord.File(filename))
+        await ctx.send(f"{ctx.author.mention}, {keyword}'s butthole inspection is complete, sir! Here's everything we found hiding up there:", file=discord.File(filename))
         os.remove(filename)  # Clean up the file after sending
     else:
         await ctx.send(f"{ctx.author.mention}, no results found.")
