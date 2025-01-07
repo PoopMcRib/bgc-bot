@@ -21,6 +21,9 @@ start_time = time.time()
 # Your UserID for restricted commands
 AUTHORIZED_USER_ID = int("171706838134423552")  # Replace with your Discord User ID
 
+# Your UserID for restricted commands
+AUTHORIZED_USER_ID = int("171706838134423552")  # Replace with your Discord User ID
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
@@ -34,11 +37,13 @@ async def fetch_board_name(board_id, session):
         data = await response.json()
         return data.get("name", f"Unknown Board ({board_id})")
 
-async def fetch_cards(board_id, session, closed=False):
-    url = f"https://api.trello.com/1/boards/{board_id}/cards{'/closed' if closed else ''}"
+async def fetch_all_cards(board_id, session):
+    """Fetch all cards (active and archived) from a Trello board."""
+    url = f"https://api.trello.com/1/boards/{board_id}/cards?filter=all"
     params = {"key": TRELLO_API_KEY, "token": TRELLO_TOKEN}
     async with session.get(url, params=params) as response:
         if response.status != 200:
+            print(f"Error fetching cards for board {board_id}: {response.status}")
             return []
         return await response.json()
 
@@ -50,6 +55,7 @@ async def fetch_roblox_user_id(username):
     async with ClientSession() as session:
         async with session.post(url, json=payload, headers=headers) as response:
             if response.status != 200:
+                print(f"Failed to fetch user ID for {username}. Status code: {response.status}")
                 return None
             data = await response.json()
             if "data" in data and data["data"]:
@@ -61,7 +67,11 @@ async def fetch_roblox_previous_usernames(user_id):
     url = f"https://users.roblox.com/v1/users/{user_id}/username-history"
     async with ClientSession() as session:
         async with session.get(url) as response:
+            if response.status == 429:  # Rate limit
+                print(f"Rate limit hit while fetching previous usernames for user ID {user_id}.")
+                return None  # Indicate failure to fetch previous usernames
             if response.status != 200:
+                print(f"Error fetching previous usernames for user ID {user_id}: {response.status}")
                 return []
             data = await response.json()
             return [entry["name"] for entry in data.get("data", [])]
@@ -69,7 +79,7 @@ async def fetch_roblox_previous_usernames(user_id):
 @bot.command()
 async def search(ctx, keyword: str):
     """Search Trello boards for a given keyword and send results in the chat."""
-    await ctx.send(f"Sir yes sir, {ctx.author.mention}, sir! Currently inspecting {keyword}'s butthole! Please wait, sir!")
+    await ctx.send(f"{ctx.author.mention}, searching for '{keyword}'... Please wait.")
 
     board_ids = [
         'KHYhrBju', # District Court of Firestone
@@ -156,63 +166,56 @@ async def search(ctx, keyword: str):
         # Add more board IDs as needed
     ]
     results = {}
-    seen_cards = set()  # Track cards already added
-    usernames_to_search = [keyword]
+    seen_cards = set()
+    usernames_to_search = [keyword.lower()]
 
     # Fetch Roblox user details if the keyword is a username
     user_id = await fetch_roblox_user_id(keyword)
+    previous_usernames = []
     if user_id:
-        previous_usernames = await fetch_roblox_previous_usernames(user_id)
-        usernames_to_search.extend(previous_usernames)
+        fetched_usernames = await fetch_roblox_previous_usernames(user_id)
+        if fetched_usernames is None:
+            await ctx.send(f"{ctx.author.mention}, failed to fetch previous usernames due to rate limiting. Only the provided username will be checked.")
+        else:
+            previous_usernames = fetched_usernames
+            usernames_to_search.extend([name.lower() for name in previous_usernames])
 
     async with ClientSession() as session:
-        tasks = []
         for board_id in board_ids:
-            tasks.append(fetch_board_name(board_id, session))
-            tasks.append(fetch_cards(board_id, session, closed=False))
-            tasks.append(fetch_cards(board_id, session, closed=True))
-
-        responses = await asyncio.gather(*tasks, return_exceptions=True)
-
-        for i in range(0, len(responses), 3):
-            board_name = responses[i]
-            active_cards = responses[i + 1]
-            archived_cards = responses[i + 2]
-
-            if isinstance(active_cards, Exception) or isinstance(archived_cards, Exception):
-                results[board_name] = ["[FAILED CHECK]"]
+            cards = await fetch_all_cards(board_id, session)
+            if not cards:
+                results[f"Unknown Board ({board_id})"] = ["[FAILED CHECK]"]
                 continue
 
-            all_cards = [(card, False) for card in active_cards] + [(card, True) for card in archived_cards]
-
             board_results = []
-            for card, is_archived in all_cards:
+            for card in cards:
                 card_id = card['id']
-                if card_id in seen_cards:  # Skip if card is already added
+                if card_id in seen_cards:
                     continue
 
-                for username in usernames_to_search:
-                    if username.lower() in card["name"].lower() or username.lower() in card.get("desc", "").lower():
-                        seen_cards.add(card_id)  # Mark card as seen
-                        card_link = f"https://trello.com/c/{card['shortLink']}"
-                        archive_notice = " (Archived)" if is_archived else ""
-                        board_results.append(f"{card['name']}: {card_link}{archive_notice}")
+                if any(username in card["name"].lower() or username in card.get("desc", "").lower() for username in usernames_to_search):
+                    seen_cards.add(card_id)
+                    card_link = f"https://trello.com/c/{card['shortLink']}"
+                    archive_notice = " (Archived)" if card.get("closed", False) else ""
+                    board_results.append(f"{card['name']}: {card_link}{archive_notice}")
 
             if board_results:
-                results[board_name] = list(set(results.get(board_name, []) + board_results))
+                board_name = await fetch_board_name(board_id, session)
+                results[board_name] = board_results
 
     # Create a text file with the results
     if results:
         filename = f"{keyword}_Background_Check.txt"
         with open(filename, "w", encoding="utf-8") as file:
             # Write previous usernames at the top
-            file.write("Previous Usernames: " + ", ".join(previous_usernames) + "\n\n")
+            if previous_usernames:
+                file.write("Previous Usernames: " + ", ".join(previous_usernames) + "\n\n")
             for board_name, board_results in results.items():
                 file.write(f"Board: {board_name}\n")
                 file.write("\n".join(board_results) + "\n\n")
 
-        await ctx.send(f"{ctx.author.mention}, {keyword}'s butthole inspection is complete, sir! Here's everything we found hiding up there:", file=discord.File(filename))
-        os.remove(filename)  # Clean up the file after sending
+        await ctx.send(f"{ctx.author.mention}, search complete!", file=discord.File(filename))
+        os.remove(filename)
     else:
         await ctx.send(f"{ctx.author.mention}, no results found.")
 
@@ -222,16 +225,16 @@ async def runtime(ctx):
     elapsed_time = time.time() - start_time
     hours, remainder = divmod(elapsed_time, 3600)
     minutes, seconds = divmod(remainder, 60)
-    await ctx.send(f"I have been inspecting buttholes for {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds, sir!")
+    await ctx.send(f"The bot has been running for {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.")
 
 @bot.command()
 async def restart(ctx):
     """Restart the bot (restricted to authorized user)."""
     if ctx.author.id == AUTHORIZED_USER_ID:
-        await ctx.send("Sir yes sir, daddy Prop, sir!")
+        await ctx.send("Restarting the bot...")
         os.execv(sys.executable, ['python'] + sys.argv)
     else:
-        await ctx.send("You ain't got the roles for that lil bro.")
+        await ctx.send("You are not authorized to use this command.")
 
 # Run the bot
 bot.run(os.getenv("BOT_TOKEN"))
