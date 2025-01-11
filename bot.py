@@ -21,9 +21,6 @@ start_time = time.time()
 # Your UserID for restricted commands
 AUTHORIZED_USER_ID = int("171706838134423552")  # Replace with your Discord User ID
 
-# Your UserID for restricted commands
-AUTHORIZED_USER_ID = int("171706838134423552")  # Replace with your Discord User ID
-
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
@@ -163,6 +160,101 @@ async def search(ctx, keyword: str):
         'DK5U3qhK', # SCSO:PTD | Staff Board
         'YbN4xaAr', # Firestone Firearms Commission
         'XnYh2AN1', # State Registry of Health
+        'tQozNPff', # FSP: TROOP 1 OFFICIAL
+        'pBbZzluZ', # FSP: TROOP 2 OFFICIAL
+        '1O4YxyWc', # FSP: TROOP 3 OFFICIAL (EXECUTIVE SECURITY UNIT)
+        'HcIrCDfX', # FSP: AIR SUPPORT UNIT
+        'I9SEkunf', # ASU: CERTIFICATIONS
+        'zF0Upr0z', # FSP | Discharge Reports
+        'pVlsiHHI', # Firestone State Patrol: Air Support Unit
+        'VIqpDE9l', # FSP ASU: Special Response Control Board
+        'rKx04kvs', # ASU | Control Site (DEFUNCT)
+        'BZoRg9iR', # Sergeant OpticKamilShot's Unit Board
+        'U8pAHXUV', # Sergeant JackKelso_CFL's Unit Board
+        'Jjpunx3S', # ASU | Bravo Squadron Unit Board
+        'gXU60qux', # FSP: New Platoon 1
+        'K6cdfnZN', # FSP: Applications Backup Board
+        'ntKop8Fh', # FSP: Applications V2
+        'JsSsJzO6', # FSCG | Brigade
+        'AyqXhft0', # 1st Military Police Battalion Main Board
+        'LZiUH8fq', # Military Police Board
+        'ZFWRAl0s', # FNG: 3rd Infantry Battalion
+        'acIiYSO1', # 6th Ranger Regiment
+        'j84b7Btm', # Coast Guard OLD
+        'HDyP9fRE', # FDOC | Platoon 1
+        'Xr1maDMr', # FDOC | Platoon 2
+        'A6HSoOsz', # MD | Control Board
+        'dtNWzl1C', # FPS - RLEA Internal
+        'mXcCIrDg', # FPS - CPA Internal
+        'bwgguVVp', # SCSO:PD | Platoon 2
+        'oHdNygwW', # RPD | Academy Board
+        'RL3qOkVd', # RPD Academy OUT OF USE
+        'jJDnchnh', # Public Health Firestone
+        'yLU0jWV6', # Stapleton County Medical Centre
+        'XoLriYa7', # Stapleton County Medical Service
+        '5lRtbOMh', # DOH Human Resources
+        'ulGN9r9m', # DOH Application Tracker
+        'v2EuCS1p', # Stapleton County Medical Center
+        'eaeV2Y0v', # Stapleton County Medical Service (EMS)
+        'OxiFMufh', # DoH: Program Tracker
+        '2iJ6XhBY', # DOH Training Bureau Control Board
+        'FaGQYHTX', # SCFD | Field Operations
+        'yXOaoNf3', # SCFD | EMS Division
+        'inwj8GNv', # SCFD | Search and Rescue
+        'shtIfI9G', # SCFD ARCHIVE
+        '43KK7mHa', # (SCFD) Fire Control Board
+        'aU4rQ8WG', # (SCFD) EMS Control Board
+        'Ipp7eh4I', # (SCFD) Certifications Control Board
+        'SzyrSNdh', # [SCFD] SCFA/Other Certifications Board
+        'h84N5ZZ9', # DPW | Company 1
+        'lHh8jSu6', # DPW | Company 2
+        'd6u3P0dI', # DPW | Public Relations
+        'BocPliMA', # DPW | Community Service
+        'wj5vGcAo', # DPW | Ride Along Division
+        '1gOT0qTS', # FDOT | Control Board
+        '3USrhimT', # FDOT | Employment Records
+        'lnstqHUV', # POST | Appeals Panel
+        '8i08CBiL', # Firestone POST
+        'aSWJf62o', # POST | Blacklist Board
+        'WZM3d2vv', # [FDOJ] Public Defender's Office
+        'RsTIrXiR', # CFL Applications
+        'YK7fpyx1', # Supreme Court of Firestone
+        '4DYKWKig', # BD | Main Operations Board
+        'SwSEAat8', # FDOD | Control Board
+        'zzguCtZi', # FDOD | Human Resources Board
+        'BvGxQHl7', # DPS Control Board
+        'wYLWoC9g', # DPS Blacklist Committee
+        '2o487N8y', # DPS | Office of Auditing
+        'tEVCwnJP', # FS | Department of State
+        '8vfvg87m', # DOS Archive Main Board
+        '0UMhu6CK', # DOS Executive Archive
+        'y7QU9UUM', # DOS Legislation Archive
+        'sCT05qxD', # DOS Election Archive
+        'yrMs1pkZ', # DOS Judicial Archive
+        'yXUYwrLE', # DOS Firestone Awards
+        'qLuREZ8b', # FAA Control Board
+        'f5er1jOd', # FAA Employee Hub
+        'uIGfYpID', # FAA Employment Records
+        'FpDfoqtj', # FAA Rotorcraft Pilots Licensing
+        'xfIqiZmY', # FDOA Issued Licenses
+        'yXIDv41R', # State Legislature Board
+        'Paha9q5g', # State Legislature Operations
+        'WPgSfcrM', # SC: Executive Branch
+        'bcZASRG7', # SC: County Council
+        'ngipbuSC', # SC: County Records Board
+        'yiYPkvW8', # SC: County Legislation Review Committee
+        'uhJ1DTjS', # SC: County Executive Branch
+        'GdL8GJIF', # SC: County Council (ARCHIVED)
+        'EXd96kmV', # Office of the Mayor of Prominence
+        'tsNEW5kg', # Prominence District Council
+        'XgJDbtby', # Prominence District Records
+        '7GpenRr1', # Prominence District Awards Storage
+        'pK66sdV7', # Office of the Mayor of Redwood
+        'gVPTVd0r', # Redwood City Council
+        'g06YwcHJ', # Redwood City Records Board
+        'YOgB6ddE', # Arborfield Administration
+        'gcBwNq7w', # Arborfield City Council
+        'nOwFvREq', # Arborfield Records
         # Add more board IDs as needed
     ]
     results = {}
