@@ -6,6 +6,7 @@ import asyncio
 from aiohttp import ClientSession
 import time
 import sys
+import chat_exporter
 
 # Discord bot setup
 intents = discord.Intents.all()
@@ -20,6 +21,7 @@ start_time = time.time()
 
 # Your UserID for restricted commands
 AUTHORIZED_USER_ID = int("171706838134423552")  # Replace with your Discord User ID
+TRANSCRIPT_ROLE_ID = int("1324438075996242082")  # Replace with the Role ID for transcript command
 
 @bot.event
 async def on_ready():
@@ -310,6 +312,10 @@ async def search(ctx, keyword: str):
         os.remove(filename)
     else:
         await ctx.send(f"{ctx.author.mention}, no results found.")
+
+@bot.command()
+async def transcript(ctx: commands.Context):
+    await chat_exporter.quick_export(ctx.channel)
 
 @bot.command()
 async def runtime(ctx):
