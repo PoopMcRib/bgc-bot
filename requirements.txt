@@ -3,3 +3,4 @@ discord.py==2.4.0
 requests==2.30.0
 asyncio==3.4.3
 aiohttp==3.11.11
+chat-exporter==2.8.1
