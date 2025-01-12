@@ -256,6 +256,7 @@ async def search(ctx, keyword: str):
         'YOgB6ddE', # Arborfield Administration
         'gcBwNq7w', # Arborfield City Council
         'nOwFvREq', # Arborfield Records
+        '8avwN18U', # MD | Patrol Squadron
         # Add more board IDs as needed
     ]
     results = {}
