@@ -21,7 +21,6 @@ start_time = time.time()
 
 # Your UserID for restricted commands
 AUTHORIZED_USER_ID = int("171706838134423552")  # Replace with your Discord User ID
-TRANSCRIPT_ROLE_ID = int("1324438075996242082")  # Replace with the Role ID for transcript command
 
 @bot.event
 async def on_ready():
