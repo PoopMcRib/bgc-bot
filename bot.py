@@ -290,6 +290,53 @@ async def boards(ctx):
 
     await ctx.send(f"{ctx.author.mention}, board check complete!", file=discord.File(filename))
     os.remove(filename)
+    
+@bot.command()
+async def friends(ctx, username: str):
+    """Fetch the friends of a given Roblox username and output to a text file."""
+    await ctx.send(f"{ctx.author.mention}, fetching friends for '{username}'... Please wait.")
+
+    user_id_url = "https://users.roblox.com/v1/usernames/users"
+    friends_url_template = "https://friends.roblox.com/v1/users/{user_id}/friends"
+
+    # Fetch user ID from username
+    async with ClientSession() as session:
+        payload = {"usernames": [username]}
+        headers = {"Content-Type": "application/json"}
+
+        async with session.post(user_id_url, json=payload, headers=headers) as response:
+            if response.status != 200:
+                await ctx.send(f"Failed to fetch user ID for {username}. Please try again.")
+                return
+
+            data = await response.json()
+            if not data.get("data"):
+                await ctx.send(f"No Roblox user found with the username '{username}'.")
+                return
+
+            user_id = data["data"][0]["id"]
+
+        # Fetch friends list
+        friends_url = friends_url_template.format(user_id=user_id)
+        async with session.get(friends_url) as response:
+            if response.status != 200:
+                await ctx.send(f"Failed to fetch friends list for {username}. Please try again.")
+                return
+
+            friends_data = await response.json()
+            friends = [f"{friend['name']}:{friend['id']}" for friend in friends_data.get("data", [])]
+
+    # Write results to a file
+    if friends:
+        filename = f"{username}_friends_list.txt"
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(f"{username} has {len(friends)} friends:\n\n")
+            file.write("\n".join(friends))
+
+        await ctx.send(f"{ctx.author.mention}, friends list fetched successfully!", file=discord.File(filename))
+        os.remove(filename)
+    else:
+        await ctx.send(f"No friends found for {username}.")
 
 @bot.command()
 async def search(ctx, keyword: str):
@@ -353,7 +400,6 @@ async def search(ctx, keyword: str):
 @bot.command()
 async def transcript(ctx: commands.Context):
     await chat_exporter.quick_export(ctx.channel)
-
 
 @bot.command()
 async def runtime(ctx):
